@@ -283,21 +283,21 @@
   <!-- AUTHENTICATION -->
   <div id="auth-overlay">
     <div class="auth-box" id="login-panel">
-      <h2 style="margin-bottom: 25px; font-weight: 900; letter-spacing: 2px;">NEURAL ACCESS</h2>
-      <input type="text" id="l-name" class="auth-input" placeholder="User Name">
+      <h2 style="margin-bottom: 25px; font-weight: 900; letter-spacing: 2px; color: var(--primary);">NEXTGEN LOGIN</h2>
+      <input type="text" id="l-name" class="auth-input" placeholder="Enter Your Name">
       <input type="tel" id="l-mobile" class="auth-input" placeholder="Mobile Number">
-      <button class="auth-btn" onclick="appLogin()">Verify Link</button>
+      <button class="auth-btn" onclick="appLogin()">Verify & Enter</button>
       <p style="margin-top: 20px; font-size: 13px; color: #888;">New Node? <span
           style="color: var(--primary); cursor: pointer;" onclick="toggleAuth('signup')">Register
           Identity</span></p>
     </div>
 
     <div class="auth-box" id="signup-panel" style="display:none;">
-      <h2 style="margin-bottom: 25px; font-weight: 900;">NEW INDEX</h2>
+      <h2 style="margin-bottom: 25px; font-weight: 900; color: var(--primary);">STUDENT REGISTRATION</h2>
       <input type="text" id="r-name" class="auth-input" placeholder="Full Name">
       <input type="number" id="r-roll" class="auth-input" placeholder="Roll Number (13 Digits)">
-      <input type="tel" id="r-mobile" class="auth-input" placeholder="Mobile">
-      <button class="auth-btn" onclick="appSignUp()">Create Path</button>
+      <input type="tel" id="r-mobile" class="auth-input" placeholder="Mobile Number">
+      <button class="auth-btn" onclick="appSignUp()">Create Account</button>
       <p style="margin-top: 20px; font-size: 13px; color: #888;">Already Indexed? <span
           style="color: var(--primary); cursor: pointer;" onclick="toggleAuth('login')">Login</span></p>
     </div>
