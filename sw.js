@@ -1,6 +1,7 @@
-const CACHE_NAME = 'nextgen-cache-v1';
+const CACHE_NAME = 'nextgen-cache-v2';
 const urlsToCache = [
-  './googleaistdio.html',
+  './',
+  './index.html',
   './manifest.json',
   './favicon1.png'
 ];
