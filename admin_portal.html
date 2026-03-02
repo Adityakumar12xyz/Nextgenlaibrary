@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NextGen | Command Center Pro</title>
+    <!-- Fonts & Icons -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        :root {
+            --cmd-bg: #030712;
+            --cmd-accent: #ff4757;
+            --cmd-glow: #00f2fe;
+            --cmd-border: rgba(0, 242, 254, 0.2);
+            --cmd-glass: rgba(15, 23, 42, 0.82);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--cmd-bg);
+            color: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- TACTICAL GRID --- */
+        #grid-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background-image: linear-gradient(rgba(0, 242, 254, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 254, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 280px;
+            background: rgba(0, 0, 0, 0.9);
+            border-right: 1px solid var(--cmd-border);
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            backdrop-filter: blur(15px);
+        }
+
+        .sidebar-brand {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--cmd-glow);
+            text-shadow: 0 0 10px var(--cmd-glow);
+            margin-bottom: 50px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-item {
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #888;
+            font-weight: 500;
+        }
+
+        .nav-item.active,
+        .nav-item:hover {
+            background: rgba(0, 242, 254, 0.1);
+            color: #fff;
+            border-left: 4px solid var(--cmd-glow);
+        }
+
+        /* --- MAIN AREA --- */
+        .main-content {
+            flex: 1;
+            padding: 40px;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hud-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .hud-card {
+            background: var(--cmd-glass);
+            border: 1px solid var(--cmd-border);
+            padding: 25px;
+            border-radius: 20px;
+            position: relative;
+        }
+
+        .hud-val {
+            font-size: 36px;
+            font-weight: 900;
+            color: var(--cmd-glow);
+        }
+
+        .hud-lab {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #888;
+            letter-spacing: 2px;
+        }
+
+        /* --- LIVE ACTIVITY TABLE --- */
+        .data-panel {
+            background: var(--cmd-glass);
+            border: 1px solid var(--cmd-border);
+            padding: 30px;
+            border-radius: 25px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(20px);
+        }
+
+        .presence-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .presence-table th {
+            text-align: left;
+            padding: 15px;
+            color: var(--cmd-glow);
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .presence-table td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 14px;
+        }
+
+        .status-on {
+            color: #2ecc71;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #2ecc71;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.2;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.2;
+            }
+        }
+
+        /* --- APK GENERATOR BUTTON --- */
+        .apk-station {
+            background: linear-gradient(135deg, #00f2fe, #4facfe);
+            color: #000;
+            padding: 30px;
+            border-radius: 25px;
+            margin-top: 40px;
+            text-align: center;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 30px rgba(0, 242, 254, 0.4);
+        }
+
+        .gen-btn {
+            background: #000;
+            color: #fff;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-weight: 800;
+            border: none;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 20px;
+            transition: 0.3s;
+            text-decoration: none;
+        }
+
+        .gen-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px #000;
+        }
+
+        /* --- INPUTS --- */
+        .cmd-input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--cmd-border);
+            border-radius: 12px;
+            color: #fff;
+            margin-bottom: 15px;
+            outline: none;
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="grid-overlay"></div>
+
+    <aside class="sidebar">
+        <div class="sidebar-brand">📡 NEXTGEN COMMAND</div>
+        <div class="nav-item active"><i class="fas fa-th-large"></i> Dashboard</div>
+        <div class="nav-item"><i class="fas fa-users"></i> Users Control</div>
+        <div class="nav-item"><i class="fas fa-file-invoice-dollar"></i> Payments</div>
+        <div class="nav-item"><i class="fas fa-robot"></i> AI Manager</div>
+        <div class="nav-item"><i class="fas fa-mobile-alt"></i> Mobile App Tool</div>
+        <div class="nav-item" onclick="location.reload()" style="margin-top: auto; color: var(--cmd-accent);"><i
+                class="fas fa-power-off"></i> Reboot Console</div>
+    </aside>
+
+    <main class="main-content">
+        <header class="dashboard-header">
+            <div>
+                <h1 style="font-size: 32px; font-weight: 900; letter-spacing: 1px;">MISSION CONTROL</h1>
+                <p style="color: #666; font-size: 14px;">Real-time Node Monitoring // Status: ACTIVE</p>
+            </div>
+            <div id="system-time" style="font-family: 'JetBrains Mono'; color: var(--cmd-glow);">00:00:00</div>
+        </header>
+
+        <!-- LIVE HUD -->
+        <div class="hud-row">
+            <div class="hud-card">
+                <div class="hud-lab">Active Neural Nodes</div>
+                <div class="hud-val" id="count-active">0</div>
+            </div>
+            <div class="hud-card" style="border-right: 4px solid gold;">
+                <div class="hud-lab">Pending Approvals</div>
+                <div class="hud-val" style="color: gold;" id="count-pending">0</div>
+            </div>
+            <div class="hud-card">
+                <div class="hud-lab">Daily Traffic Peak</div>
+                <div class="hud-val">128+</div>
+            </div>
+        </div>
+
+        <!-- LIVE USER TRACKING -->
+        <div class="data-panel">
+            <h3 style="margin-bottom: 25px; color: var(--cmd-glow);"><i class="fas fa-map-marker-alt"></i> LIVE NEURAL
+                ACTIVITY</h3>
+            <table class="presence-table">
+                <thead>
+                    <tr>
+                        <th>Node Name</th>
+                        <th>Mobile Key</th>
+                        <th>Current Sector</th>
+                        <th>Last Pulse</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="live-table-body">
+                    <!-- Live entries injected here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- APK GENERATOR COMMAND -->
+        <div class="apk-station">
+            <h2 style="font-weight: 900; font-size: 28px;">🚀 RAPID APK DEPLOYMENT</h2>
+            <p style="margin-top: 10px; font-weight: 500;">Convert your NextGen Portal into an Android Application
+                instantly.</p>
+            <div
+                style="background: rgba(0,0,0,0.1); padding: 15px; border-radius: 12px; margin-top: 20px; font-size: 13px;">
+                <strong>Instructions:</strong> 1. Click button below → 2. Wait for Build → 3. Download APK
+            </div>
+            <a href="https://www.pwabuilder.com/?url=https://nextgen-6c99e.web.app" target="_blank" class="gen-btn">
+                BUILD & DOWNLOAD .APK
+            </a>
+        </div>
+
+        <!-- BROADCAST PANEL -->
+        <div class="data-panel" style="margin-top: 40px; border-color: var(--cmd-accent);">
+            <h3 style="color: var(--cmd-accent); margin-bottom: 20px;"><i class="fas fa-bullhorn"></i> TRANSMIT GLOBAL
+                SIGNAL</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label style="font-size: 11px; color:#888;">SIGNAL TITLE</label>
+                    <input type="text" id="notif-title" class="cmd-input" placeholder="e.g. System Alert">
+                </div>
+                <div>
+                    <label style="font-size: 11px; color:#888;">TARGET SECTOR</label>
+                    <select class="cmd-input">
+                        <option>GLOBAL BROADCAST</option>
+                    </select>
+                </div>
+            </div>
+            <label style="font-size: 11px; color:#888;">ENCODED MESSAGE</label>
+            <textarea id="notif-body" class="cmd-input" style="height: 100px;"
+                placeholder="Enter message payload..."></textarea>
+            <button class="gen-btn" style="background: var(--cmd-accent); width: 100%; border-radius: 12px;"
+                onclick="sendSignal()">TRANSMIT NOW</button>
+        </div>
+
+    </main>
+
+    <script>
+        // --- FIREBASE INIT ---
+        const config = {
+            apiKey: "AIzaSyCeW3RJPGLgP1uKbN5zKQhQDJ6KTkAhPaY",
+            databaseURL: "https://nextgen-6c99e-default-rtdb.firebaseio.com/",
+        };
+        firebase.initializeApp(config);
+        const db = firebase.database();
+
+        // --- CLOCK ---
+        setInterval(() => {
+            document.getElementById('system-time').innerText = new Date().toLocaleTimeString();
+        }, 1000);
+
+        // --- LIVE NEURAL ACTIVITY SYNC ---
+        db.ref('presence').on('value', snap => {
+            const users = snap.val() || {};
+            const tableBody = document.getElementById('live-table-body');
+            tableBody.innerHTML = "";
+            let count = 0;
+
+            for (let key in users) {
+                const u = users[key];
+                const lastActive = new Date(u.lastActive).toLocaleTimeString();
+
+                tableBody.innerHTML += `
+                    <tr>
+                        <td style="font-weight: 700; color: #fff;">${u.name}</td>
+                        <td style="font-family: 'JetBrains Mono'; color: #00f2fe;">${key}</td>
+                        <td style="color: #aaa;">${u.location || 'Unknown'}</td>
+                        <td style="color: #666;">${lastActive}</td>
+                        <td><div class="status-on"><div class="pulse-dot"></div> ONLINE</div></td>
+                    </tr>
+                `;
+                count++;
+            }
+            document.getElementById('count-active').innerText = count;
+        });
+
+        // --- BROADCAST LOGIC ---
+        function sendSignal() {
+            const title = document.getElementById('notif-title').value.trim();
+            const body = document.getElementById('notif-body').value.trim();
+            if (!title || !body) return alert("Missing Signal Payload!");
+
+            db.ref('broadcast').set({
+                title, body, timestamp: Date.now()
+            }).then(() => {
+                alert("Signal Transmitted Globally!");
+                document.getElementById('notif-title').value = "";
+                document.getElementById('notif-body').value = "";
+            });
+        }
+    </script>
+</body>
+
+</html>
